@@ -7,11 +7,16 @@ from logging import getLogger
 from pyramid.httpexceptions import exception_response
 from pyramid.security import Allow, Everyone
 from webob.multidict import NestedMultiDict
+from pkg_resources import get_distribution
 
-from reports.brokers.utils import VERSION, default_error_status
 
+PKG = get_distribution(__package__)
+LOGGER = getLogger(PKG.project_name)
+VERSION = '{}.{}'.format(int(PKG.parsed_version._version.release[0]), int(PKG.parsed_version._version.release[1]))
 USERS = {}
-LOGGER = getLogger(__name__)
+ROUTE_PREFIX = '/api/{}'.format(VERSION)
+default_error_status = 403
+
 
 
 class Root(object):
@@ -185,3 +190,7 @@ def handle_error(request, response):
                                                                  {u'message': u'Service is disabled or upgrade.'}]})
     return error_handler(request, default_error_status, {"location": "body", "name": "data",
                                                          "description": response.json()['errors']})
+
+
+def save_audit(audit, db):
+    audit.store(db)

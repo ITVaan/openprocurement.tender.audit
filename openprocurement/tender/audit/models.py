@@ -41,7 +41,7 @@ from openprocurement.api.models import Document as BaseDocument
 from openprocurement.api.models import Organization as BaseOrganization
 from openprocurement.api.models import ContactPoint as BaseContactPoint
 from openprocurement.api.models import CPVClassification as BaseCPVClassification
-from openprocurement.tender.core.models import Administrator_role
+# from openprocurement.tender.core.models import Administrator_role
 from openprocurement.api.validation import validate_items_uniq
 
 item_edit_role = whitelist(
@@ -79,7 +79,9 @@ audit_view_role = (whitelist(
     'amountPaid', 'terminationDetails', 'audit_amountPaid',
 ))
 
-audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
+# TODO audit admin
+
+# audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
 
 
 class ContactPoint(BaseContactPoint):
@@ -137,7 +139,7 @@ class Change(Model):
 
 class Document(BaseDocument):
     """ Contract Document """
-    documentType = StringType(choices=["startMonitoring", "suit", "stopMonitoring", ""])
+    documentType = StringType(choices=["startMonitoring", "suit", "stopMonitoring"])
 
 
 class Answer(Model):
@@ -146,11 +148,13 @@ class Answer(Model):
     description = StringType()
     documents = ListType(ModelType(Document), default=list())
     dateCreated = IsoDateTimeType()
+    response_to = id = MD5Type(required=False)
 
 
 class Offense(Answer):
+    id = MD5Type(required=True, default=lambda: uuid4().hex)
     status = StringType(choices=['fixed', 'not_fixed', 'partially_fixed'], default='not_fixed')
-    typical_offenses = ListType(ModelType(StringType))
+    typical_offenses = ListType(StringType)
 
 
 class Conclusion(Answer):
@@ -160,6 +164,7 @@ class Conclusion(Answer):
 class Audit(SchematicsDocument):
     """ audit """
 
+    id = MD5Type(required=True, default=lambda: uuid4().hex)
     revisions = ListType(ModelType(Revision), default=list())
     author = ModelType(Organization, required=True)  # author of claim
     title = StringType(required=True)  # title of the claim
@@ -176,6 +181,9 @@ class Audit(SchematicsDocument):
     changes = ListType(ModelType(Change), default=list())
     documents = ListType(ModelType(Document), default=list())
     termination_details = StringType()
+    answers = ListType(ModelType(Answer))
+    conclusions = ListType(ModelType(Conclusion))
+    offenses = ListType(ModelType(Offense))
 
     class Options:
         roles = {
@@ -184,7 +192,7 @@ class Audit(SchematicsDocument):
             'edit_active': audit_edit_role,
             'edit_terminated': whitelist(),
             'view': audit_view_role,
-            'Administrator': audit_administrator_role,
+            # 'Administrator': audit_administrator_role,
             'default': schematics_default_role,
         }
 

@@ -4,6 +4,10 @@ import os
 version = '0.0.1'
 
 requires = [
+    'couchdb-schematics',
+    'gevent',
+    'iso8601',
+    'jsonpatch',
     'setuptools',
 ]
 
@@ -25,6 +29,9 @@ api_requires = requires + [
 entry_points = {
     'openprocurement.api.plugins': [
         'tender.audit = openprocurement.tender.audit:includeme'
+    ],
+    'paste.app_factory': [
+        'main = openprocurement.tender.audit:main'
     ],
     # 'openprocurement.api.migrations': [
     #     'audits = openprocurement.tender.audit.migration:migrate_data'
