@@ -2,6 +2,12 @@
 from couchdb.design import ViewDefinition
 
 
+FIELDS = [
+    '_id',
+    '_rev',
+    'auditID'
+]
+
 def add_index_options(doc):
     doc['options'] = {'local_seq': True}
 
@@ -13,6 +19,12 @@ def sync_design(db):
 
 audits_all_view = ViewDefinition('audits', 'all', '''function(doc) {
     if(doc.doc_type == 'Audit') {
-        emit(doc.auditID, null);
+        var fields=%s, data={};
+            for (var i in fields) {
+                if (doc[fields[i]]) {
+                    data[fields[i]] = doc[fields[i]]
+                }
+            }
+        emit(doc.auditID, data);
     }
-}''')
+}''' % FIELDS)
