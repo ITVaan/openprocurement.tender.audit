@@ -8,9 +8,23 @@ from pyramid.httpexceptions import exception_response
 from pyramid.security import Allow, Everyone
 from webob.multidict import NestedMultiDict
 from pkg_resources import get_distribution
+from functools import partial
+from cornice.resource import resource
+
+from schematics.exceptions import ValidationError
+
+from openprocurement.api.models import Revision
+from openprocurement.api.utils import (
+    get_now,
+    set_modetest_titles,
+    get_revision_changes
+)
+from openprocurement.tender.audit.traversal import factory
+from openprocurement.tender.audit.models import Audit
+
 
 PKG = get_distribution(__package__)
-LOGGER = getLogger(PKG.project_name)
+logger = getLogger(PKG.project_name)
 VERSION = '{}.{}'.format(int(PKG.parsed_version._version.release[0]), int(PKG.parsed_version._version.release[1]))
 USERS = {}
 ROUTE_PREFIX = '/api/{}'.format(VERSION)
@@ -29,7 +43,7 @@ class Root(object):
 
 
 def read_users(filename):
-    LOGGER.info("Read users {}".format(filename))
+    logger.info("Read users {}".format(filename))
     config = ConfigParser()
     config.read(filename)
     for i in config.sections():
@@ -46,7 +60,7 @@ def read_users(filename):
 
 
 def update_logging_context(request, params):
-    LOGGER.info("Update logging context params {}".format(params))
+    logger.info("Update logging context params {}".format(params))
     if not request.__dict__.get('logging_context'):
         request.logging_context = {}
 
@@ -65,13 +79,13 @@ def context_unpack(request, msg, params=None):
 
 
 def error_handler(request, status, error):
-    LOGGER.info("Error handler request: {} status: {} error: {}".format(request, status, error))
+    logger.info("Error handler request: {} status: {} error: {}".format(request, status, error))
     params = {
         'ERROR_STATUS': status
     }
     for key, value in error.items():
         params['ERROR_{}'.format(key)] = str(value)
-    LOGGER.info('Error on processing request "{}"'.format(dumps(error)),
+    logger.info('Error on processing request "{}"'.format(dumps(error)),
                 extra=context_unpack(request, {'MESSAGE_ID': 'error_handler'}, params))
     request.response.status = status
     request.response.content_type = 'application/json'
@@ -101,9 +115,9 @@ def add_logging_context(event):
 
 
 def request_params(request):
-    LOGGER.info("Request params {}".format(request))
-    LOGGER.info("Request params get {}".format(request.GET))
-    LOGGER.info("Request params post {}".format(request.POST))
+    logger.info("Request params {}".format(request))
+    logger.info("Request params get {}".format(request.GET))
+    logger.info("Request params post {}".format(request.POST))
     try:
         params = NestedMultiDict(request.GET, request.POST)
     except UnicodeDecodeError:
@@ -122,12 +136,12 @@ def request_params(request):
                                              "description": str(e)}))
         response.content_type = 'application/json'
         raise response
-    LOGGER.info("Params {}".format(params))
+    logger.info("Params {}".format(params))
     return params
 
 
 def set_logging_context(event):
-    LOGGER.info("Set logging context {}".format(event))
+    logger.info("Set logging context {}".format(event))
     request = event.request
     params = dict()
     params['ROLE'] = str(request.authenticated_role)
@@ -137,7 +151,7 @@ def set_logging_context(event):
 
 
 def set_renderer(event):
-    LOGGER.info("Set renderer {}".format(event))
+    logger.info("Set renderer {}".format(event))
     request = event.request
     try:
         json = request.json_body
@@ -161,7 +175,7 @@ def set_renderer(event):
 
 
 def auth_check(username, password):
-    LOGGER.info("auth check")
+    logger.info("auth check")
     if username in USERS and USERS[username]['password'] == sha512(password).hexdigest():
         return ['g:{}'.format(USERS[username]['group'])]
 
@@ -173,7 +187,7 @@ def forbidden(request):
 
 
 def read_json(name):
-    LOGGER.info("Reading json")
+    logger.info("Reading json")
     import os.path
     from json import loads
     curr_dir = os.path.dirname(os.path.realpath(__file__))
@@ -184,7 +198,7 @@ def read_json(name):
 
 
 def handle_error(request, response):
-    LOGGER.info("handling error?")
+    logger.info("handling error?")
     if response.headers['Content-Type'] != 'application/json':
         return error_handler(request, default_error_status,
                              {"location": "request", "name": "ip", "description": [{u'message': u'Forbidden'}]})
@@ -202,40 +216,44 @@ def handle_error(request, response):
                                                          "description": response.json()['errors']})
 
 
-def save_audit(audit, db):
-    LOGGER.info("save {} in {}".format(audit, db))
-    audit.store(db)
+auditresource = partial(resource, error_handler=error_handler, factory=factory)
 
-#
-# def save_contract(request):
-#     """ Save contract object to database
-#     :param request:
-#     :return: True if Ok
-#     """
-#     contract = request.validated['contract']
-#
-#     if contract.mode == u'test':
-#         set_modetest_titles(contract)
-#     patch = get_revision_changes(contract.serialize("plain"),
-#                                  request.validated['contract_src'])
-#     if patch:
-#         contract.revisions.append(
-#             Revision({'author': request.authenticated_userid,
-#                       'changes': patch, 'rev': contract.rev}))
-#         old_date_modified = contract.dateModified
-#         contract.dateModified = get_now()
-#         try:
-#             contract.store(request.registry.db)
-#         except ModelValidationError, e:  # pragma: no cover
-#             for i in e.message:
-#                 request.errors.add('body', i, e.message[i])
-#             request.errors.status = 422
-#         except Exception, e:  # pragma: no cover
-#             request.errors.add('body', 'data', str(e))
-#         else:
-#             LOGGER.info('Saved contract {}: dateModified {} -> {}'.format(
-#                 contract.id, old_date_modified and old_date_modified.isoformat(),
-#                 contract.dateModified.isoformat()),
-#                 extra=context_unpack(request, {'MESSAGE_ID': 'save_contract'},
-#                                      {'CONTRACT_REV': contract.rev}))
-#             return True
+
+def audit_from_data(request, data, raise_error=True, create=True):
+    if create:
+        return Audit(data)
+    return Audit
+
+
+def save_audit(request):
+    """
+    Save audit object to database
+    :param request:
+    :return: True
+    """
+    audit = request.validated['audit']
+
+    if audit.mode == u'test':
+        set_modetest_titles(audit)
+    path = get_revision_changes(audit.serialize('plain'), request.validated['audit_src'])
+
+    if path:
+        audit.revisions.append(
+            Revision({'author': request.authenticated_userid, 'changes': path, 'rev': audit.rev})
+        )
+
+    audit.date_modified = get_now()
+    try:
+        audit.store(request.registry.db)
+    except ValidationError as e:
+        for i in e.message:
+            request.errors.add('body', i, e.message[i])
+        request.errors.status = 422
+    except Exception as e:
+        request.errors.add('body', 'data', str(e))
+    else:
+        logger.info('Saved audit {}: dateModified -> {}'.format(
+            audit.id,
+            audit.date_modified.isoformat()),
+            extra=context_unpack(request, {'MESSAGE_ID': 'save_audit'}, {'AUDIT_REV': audit.rev}))
+        return True

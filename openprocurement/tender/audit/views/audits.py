@@ -10,9 +10,9 @@ logger = getLogger("{}.init".format(__name__))
 
 
 @opresource(name='Audits', path='/audits', description="Audit data")
-class AuditResource(APIResource):
+class AuditsResource(APIResource):
     def __init__(self, request, context):
-        super(AuditResource, self).__init__(request, context)
+        super(AuditsResource, self).__init__(request, context)
         self.server = request.registry.couchdb_server
         self.update_after = request.registry.update_after
 
@@ -36,6 +36,20 @@ class AuditResource(APIResource):
         audit, audit_rev = self.db.save(loads(self.request.body))
         return {"audit": audit, "audit_rev": audit_rev}
 
+
+@opresource(name='Audit',
+            path='/audits/{audit_id}',
+            description="An audit")
+class AuditResource(APIResource):
+
+    @json_view()
+    def get(self):
+        logger.info("getting {}".format(self.request))
+        # logger.info("how about this: ".format(self.db[self.req]))
+        logger.info("eh {}".format(self.context))
+        logger.info("eh {}".format(self.context.__dict__))
+        tender_data = self.context.serialize(self.context.status)
+        return {'data': tender_data}
 
 
 # @view_config(route_name='audits', renderer='json', request_method='POST')

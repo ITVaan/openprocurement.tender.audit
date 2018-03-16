@@ -8,10 +8,14 @@ from logging import getLogger
 from requests import Session
 from pyramid.security import Allow
 
-from datetime import datetime
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
-from iso8601 import parse_date, ParseError
 from uuid import uuid4
+
+from couchdb_schematics.document import SchematicsDocument
+from schematics.exceptions import ValidationError
+from schematics.transforms import whitelist, blacklist
+from schematics.types import StringType, BaseType, MD5Type
+from schematics.types.compound import ModelType, DictType
+from openprocurement.api.models import Model, ListType, Revision, IsoDateTimeType
 from urlparse import urlparse, parse_qs
 from string import hexdigits
 from hashlib import algorithms, new as hash_new
@@ -32,6 +36,11 @@ from openprocurement.api.models import Item as BaseItem
 from openprocurement.api.models import (
     plain_role, schematics_default_role, schematics_embedded_role
 )
+
+from openprocurement.api.models import Document as BaseDocument
+from openprocurement.api.models import Organization as BaseOrganization
+from openprocurement.api.models import ContactPoint as BaseContactPoint
+from openprocurement.tender.core.models import Administrator_role
 from openprocurement.api.constants import (
     CPV_CODES, ORA_CODES, TZ, DK_CODES, CPV_BLOCK_FROM, ATC_CODES, INN_CODES, ATC_INN_CLASSIFICATIONS_FROM,
 )
@@ -79,9 +88,7 @@ audit_view_role = (whitelist(
     'amountPaid', 'terminationDetails', 'audit_amountPaid',
 ))
 
-# TODO audit admin
-
-# audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
+audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
 
 
 class ContactPoint(BaseContactPoint):
@@ -192,7 +199,7 @@ class Audit(SchematicsDocument):
             'edit_active': audit_edit_role,
             'edit_terminated': whitelist(),
             'view': audit_view_role,
-            # 'Administrator': audit_administrator_role,
+            'Administrator': audit_administrator_role,
             'default': schematics_default_role,
         }
 
@@ -238,9 +245,4 @@ class Audit(SchematicsDocument):
         """A property that is serialized by schematics exports."""
         return self._id
 
-    @serializable(serialized_name='amountPaid', serialize_when_none=False, type=ModelType(Value))
-    def audit_amountPaid(self):
-        if self.amountPaid:
-            return Value(dict(amount=self.amountPaid.amount,
-                              currency=self.value.currency,
-                              valueAddedTaxIncluded=self.value.valueAddedTaxIncluded))
+
