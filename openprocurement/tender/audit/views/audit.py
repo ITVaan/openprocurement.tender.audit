@@ -36,10 +36,3 @@ class AuditResource(APIResource):
                     'token': audit.owner_token
                 }
             }
-
-
-
-
-
-
-

@@ -9,9 +9,24 @@ from pyramid.security import Allow, Everyone
 from webob.multidict import NestedMultiDict
 from pkg_resources import get_distribution
 
+from functools import partial
+from cornice.resource import resource
+
+from schematics.exceptions import ModelValidationError
+
+from openprocurement.api.models import Revision
+from openprocurement.api.utils import (
+    get_now,
+    set_modetest_titles,
+    get_revision_changes
+)
+from openprocurement.tender.audit.traversal import factory
+from openprocurement.tender.audit.models import Audit
+
+
 
 PKG = get_distribution(__package__)
-LOGGER = getLogger(PKG.project_name)
+logger = getLogger(PKG.project_name)
 VERSION = '{}.{}'.format(int(PKG.parsed_version._version.release[0]), int(PKG.parsed_version._version.release[1]))
 USERS = {}
 ROUTE_PREFIX = '/api/{}'.format(VERSION)
@@ -70,7 +85,7 @@ def error_handler(request, status, error):
     }
     for key, value in error.items():
         params['ERROR_{}'.format(key)] = str(value)
-    LOGGER.info('Error on processing request "{}"'.format(dumps(error)),
+    logger.info('Error on processing request "{}"'.format(dumps(error)),
                 extra=context_unpack(request, {'MESSAGE_ID': 'error_handler'}, params))
     request.response.status = status
     request.response.content_type = 'application/json'
@@ -192,30 +207,7 @@ def handle_error(request, response):
                                                          "description": response.json()['errors']})
 
 
-def save_audit(audit, db):
-    audit.store(db)
-import logging
-
-from functools import partial
-from cornice.resource import resource
-
-from schematics.exceptions import ModelValidationError
-
-from openprocurement.api.models import Revision
-from openprocurement.api.utils import (
-    error_handler,
-    get_now,
-    context_unpack,
-    set_modetest_titles,
-    get_revision_changes
-)
-from openprocurement.tender.audit.traversal import factory
-from openprocurement.tender.audit.models import Audit
-
-
 auditresource = partial(resource, error_handler=error_handler, factory=factory)
-
-logger = logging.getLogger(__name__)
 
 
 def audit_from_data(request, data, raise_error=True, create=True):
@@ -244,11 +236,11 @@ def save_audit(request):
     audit.date_modified = get_now()
     try:
         audit.store(request.registry.db)
-    except ModelValidationError, e:
+    except ModelValidationError as e:
         for i in e.message:
             request.errors.add('body', i, e.message[i])
         request.errors.status = 422
-    except Exception, e:
+    except Exception as e:
         request.errors.add('body', 'data', str(e))
     else:
         logger.info('Saved audit {}: dateModified -> {}'.format(
