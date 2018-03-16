@@ -58,7 +58,7 @@ def save_audit(request):
         logger.info('Saved audit {}: dateModified -> {}'.format(
             audit.id,
             audit.date_modified.isoformat()),
-            extra=context_unpack(request, {'MESSAGE_ID': 'save_contract'}, {'AUDIT_REV': audit.rev}))
+            extra=context_unpack(request, {'MESSAGE_ID': 'save_audit'}, {'AUDIT_REV': audit.rev}))
         return True
 
 
