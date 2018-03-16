@@ -6,6 +6,7 @@ import os
 from couchdb.http import extract_credentials, Unauthorized
 from openprocurement.tender.audit.design import sync_design
 from pyramid.settings import asbool
+from pkg_resources import get_distribution
 
 if 'test' not in __import__('sys').argv[0]:
     import gevent.monkey
@@ -14,10 +15,10 @@ if 'test' not in __import__('sys').argv[0]:
 
 from logging import getLogger
 from couchdb import Server as CouchdbServer, Session
-from openprocurement.tender.audit.utils import ROUTE_PREFIX, VERSION
+from openprocurement.tender.audit.utils import ROUTE_PREFIX, VERSION, audit_from_data
 
-LOGGER = getLogger("{}.init".format(__name__))
-
+PKG = get_distribution(__package__)
+LOGGER = getLogger(PKG.project_name)
 
 class Server(CouchdbServer):
     _uuid = None
@@ -83,6 +84,8 @@ def main(global_config, **settings):
     config.registry.db = db
     config.registry.server_id = settings.get('id', '')
     config.registry.update_after = asbool(settings.get('update_after', True))
+    config.registry.tender_id = {}
+    config.add_request_method(audit_from_data)
 
     # Include views
     config.add_route('health', '/health')
