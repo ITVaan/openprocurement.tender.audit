@@ -62,6 +62,21 @@ def save_audit(request):
         return True
 
 
+def extract_audit(request):
+    db = request.registry.db
+    audit_id = request.matchdict['audit_id']
+    doc = db.get(audit_id)
+    if doc is not None and doc.get('doc_type') == 'audit':
+        request.errors.add('url', 'audit_id', 'Archived')
+        request.errors.status = 410
+        raise error_handler(request.errors)
+    elif doc is None or doc.get('doc_type') != 'Audit':
+        request.errors.add('url', 'audit_id', 'Not Found')
+        request.errors.status = 404
+        raise error_handler(request.errors)
+    return request.audit_from_data(doc)
+
+
 
 
 

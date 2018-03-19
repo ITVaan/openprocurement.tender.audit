@@ -166,14 +166,12 @@ class Audit(SchematicsDocument):
         }
 
     def __local_roles__(self):
-        return dict([('{}_{}'.format(self.owner, self.owner_token), 'audit_owner'),
-                     ('{}_{}'.format(self.owner, self.tender_token), 'tender_owner')])
+        return dict([('{}_{}'.format(self.owner, self.owner_token), 'audit_owner')])
 
     def __acl__(self):
         acl = [
             (Allow, '{}_{}'.format(self.owner, self.owner_token), 'edit_audit'),
-            (Allow, '{}_{}'.format(self.owner, self.owner_token), 'upload_audit_documents'),
-            (Allow, '{}_{}'.format(self.owner, self.tender_token), 'generate_credentials')
+            (Allow, '{}_{}'.format(self.owner, self.owner_token), 'upload_audit_documents')
         ]
         return acl
 

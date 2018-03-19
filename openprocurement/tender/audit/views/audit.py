@@ -6,10 +6,10 @@ from openprocurement.tender.audit.utils import auditresource, save_audit
 from openprocurement.tender.audit.validation import validate_audit_data
 
 
-@auditresource(name='Audit', path='/audits', description='Audits')
-class AuditResource(APIResource):
+@auditresource(name='Audits', path='/audits', description='Audits')
+class AuditsResource(APIResource):
     def __init__(self, request, context):
-        super(AuditResource, self).__init__(request, context)
+        super(AuditsResource, self).__init__(request, context)
 
     @json_view(content_type='application/json', permission='create_audit', validators=(validate_audit_data,))
     def post(self):
@@ -38,8 +38,11 @@ class AuditResource(APIResource):
             }
 
 
-
-
+@auditresource(name='Audit', path='/audits/{audit_id}', description='Audit')
+class AuditResource(AuditsResource):
+    @json_view(permission='view_audit')
+    def get(self):
+        return {'data': self.request.validated['audit'].serialize('view')}
 
 
 

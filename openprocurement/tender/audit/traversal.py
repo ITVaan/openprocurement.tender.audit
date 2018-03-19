@@ -32,7 +32,7 @@ def factory(request):
     request.validated['audit_id'] = request.matchdict['audit_id']
     audit = request.audit
     audit.__parent__ = root
-    request.validated['audit_id'] = request.validated['db_doc'] = audit
+    request.validated['audit'] = request.validated['db_doc'] = audit
 
     if request.method != 'GET':
         request.validated['audit_src'] = audit.serialize('plain')
