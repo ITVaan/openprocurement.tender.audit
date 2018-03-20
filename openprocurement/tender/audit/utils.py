@@ -77,6 +77,16 @@ def extract_audit(request):
     return request.audit_from_data(doc)
 
 
+def check_tender_exists(request, tender_id):
+    db = request.registry.db
+    doc = db.get(tender_id)
+
+    if doc is None or doc.get('doc_type') != 'Tender':
+        request.errors.add('url', 'tender_id', 'Not Found')
+        request.errors.status = 404
+        raise error_handler(request.errors)
+
+    return True
 
 
 

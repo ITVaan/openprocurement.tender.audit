@@ -3,6 +3,8 @@ from schematics.exceptions import ModelValidationError, ModelConversionError
 from openprocurement.api.utils import update_logging_context, error_handler, apply_data_patch
 from openprocurement.api.validation import validate_json_data
 
+from openprocurement.tender.audit.utils import check_tender_exists
+
 
 def validate_data(request, model, partial=False, data=None):
     if data is None:
@@ -52,6 +54,8 @@ def validate_data(request, model, partial=False, data=None):
 def validate_audit_data(request):
     update_logging_context(request, {'audit_id': '__new__'})
     data = request.validated['json_data'] = validate_json_data(request)
+
+    check_tender_exists(request, data.get('tender_id'))
     model = request.audit_from_data(data, create=False)
 
     return validate_data(request, model, data=data)
