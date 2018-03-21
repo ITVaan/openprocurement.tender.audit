@@ -31,7 +31,7 @@ class AuditsResource(APIResource):
             )
             self.request.response.status = 201
             return {
-                'data': audit.serialize("view"),
+                'data': audit.serialize("plain"),
                 'access': {
                     'token': audit.owner_token
                 }

@@ -24,7 +24,7 @@ api_requires = requires + [
 
 entry_points = {
     'openprocurement.api.plugins': [
-        'tender.audit = openprocurement.tender.audit:includeme'
+        'audit = openprocurement.tender.audit:includeme'
     ],
     # 'openprocurement.api.migrations': [
     #     'audits = openprocurement.tender.audit.migration:migrate_data'

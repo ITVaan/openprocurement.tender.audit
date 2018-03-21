@@ -114,7 +114,7 @@ class Change(Model):
 
 
 class Document(BaseDocument):
-    """ Contract Document """
+    """ Audit Document """
     documentType = StringType(choices=["startMonitoring", "suit", "stopMonitoring", ""])
 
 
