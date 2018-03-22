@@ -10,6 +10,8 @@ from schematics.types import StringType, BaseType, MD5Type
 from schematics.types.compound import ModelType, DictType
 from openprocurement.api.models import Model, ListType, Revision, IsoDateTimeType
 from schematics.types.serializable import serializable
+from urlparse import urlparse, parse_qs
+from string import hexdigits
 
 from openprocurement.api.utils import get_now, set_parent, get_schematics_document
 from openprocurement.api.models import Item as BaseItem
@@ -116,6 +118,9 @@ class Change(Model):
 class Document(BaseDocument):
     """ Audit Document """
     documentType = StringType(choices=["startMonitoring", "suit", "stopMonitoring", ""])
+    documentOf = StringType(
+        required=True, choices=['audit', 'change'], default='audit'
+    )
 
 
 class Answer(Model):
@@ -135,7 +140,7 @@ class Conclusion(Answer):
     status = StringType(choices=['appealed', 'not_appealed'], default='not_appealed')
 
 
-class Audit(SchematicsDocument):
+class Audit(SchematicsDocument, Model):
     """ audit """
     revisions = ListType(ModelType(Revision), default=list())
     author = ModelType(Organization, required=True)  # author of claim

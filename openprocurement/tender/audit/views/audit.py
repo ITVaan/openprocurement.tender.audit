@@ -2,8 +2,8 @@ from openprocurement.api.utils import (
     APIResource, json_view, context_unpack
 )
 
-from openprocurement.tender.audit.utils import auditresource, save_audit
-from openprocurement.tender.audit.validation import validate_audit_data
+from openprocurement.tender.audit.utils import auditresource, save_audit, apply_patch
+from openprocurement.tender.audit.validation import validate_audit_data, validate_patch_audit_data
 
 
 @auditresource(name='Audits', path='/audits', description='Audits')
@@ -31,7 +31,7 @@ class AuditsResource(APIResource):
             )
             self.request.response.status = 201
             return {
-                'data': audit.serialize("plain"),
+                'data': audit.serialize('plain'),
                 'access': {
                     'token': audit.owner_token
                 }
@@ -43,6 +43,21 @@ class AuditResource(AuditsResource):
     @json_view(permission='view_audit')
     def get(self):
         return {'data': self.request.validated['audit'].serialize('view')}
+
+    @json_view(permission='edit_audit', validators=(validate_patch_audit_data,))
+    def patch(self):
+        """
+        Audit Edit (partial)
+        """
+        audit = self.request.validated['audit']
+        apply_patch(self.request, save=False, src=self.request.validated['audit_src'])
+
+        if save_audit(self.request):
+            self.LOGGER.info(
+                'Updated audit {}'.format(audit.id),
+                extra=context_unpack(self.request, {'MESSAGE_ID': 'audit_patch'})
+            )
+            return {'data': audit.serialize('view')}
 
 
 

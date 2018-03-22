@@ -11,7 +11,8 @@ from openprocurement.api.utils import (
     get_now,
     context_unpack,
     set_modetest_titles,
-    get_revision_changes
+    get_revision_changes,
+    apply_data_patch
 )
 from openprocurement.tender.audit.traversal import factory
 from openprocurement.tender.audit.models import Audit
@@ -89,4 +90,11 @@ def check_tender_exists(request, tender_id):
     return True
 
 
+def apply_patch(request, data=None, save=True, src=None):
+    data = request.validated['data'] if data is None else data
+    patch = data and apply_data_patch(src or request.context.serialize(), data)
+    if patch:
+        request.context.import_data(patch)
+        if save:
+            return save_audit(request)
 
