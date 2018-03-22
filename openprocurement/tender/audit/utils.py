@@ -4,6 +4,8 @@ from functools import partial
 from cornice.resource import resource
 
 from schematics.exceptions import ModelValidationError
+from ConfigParser import ConfigParser
+from hashlib import sha512
 
 from openprocurement.api.models import Revision
 from openprocurement.api.utils import (
@@ -21,6 +23,26 @@ from openprocurement.tender.audit.models import Audit
 auditresource = partial(resource, error_handler=error_handler, factory=factory)
 
 logger = logging.getLogger(__name__)
+
+USERS = {}
+
+
+def read_users(filename):
+    logger.info(u"Read users {}".format(filename))
+    config = ConfigParser()
+    config.read(filename)
+    for i in config.sections():
+        USERS.update(dict([
+            (
+                j,
+                {
+                    'password': k,
+                    'group': i
+                }
+            )
+            for j, k in config.items(i)
+        ]))
+
 
 
 def audit_from_data(request, data, raise_error=True, create=True):
@@ -62,6 +84,10 @@ def save_audit(request):
             extra=context_unpack(request, {'MESSAGE_ID': 'save_audit'}, {'AUDIT_REV': audit.rev}))
         return True
 
+
+def auth_check(username, password, request):
+    if username in USERS and USERS[username]['password'] == sha512(password).hexdigest():
+        return ['g:{}'.format(USERS[username]['group'])]
 
 def extract_audit(request):
     db = request.registry.db

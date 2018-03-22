@@ -26,6 +26,9 @@ entry_points = {
     'openprocurement.api.plugins': [
         'audit = openprocurement.tender.audit:includeme'
     ],
+    'paste.app_factory': [
+        'main = openprocurement.tender.audit:main'
+    ],
     # 'openprocurement.api.migrations': [
     #     'audits = openprocurement.tender.audit.migration:migrate_data'
     # ]
