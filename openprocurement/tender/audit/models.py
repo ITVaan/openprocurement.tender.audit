@@ -10,8 +10,6 @@ from schematics.types import StringType, BaseType, MD5Type
 from schematics.types.compound import ModelType, DictType
 from openprocurement.api.models import Model, ListType, Revision, IsoDateTimeType
 from schematics.types.serializable import serializable
-from urlparse import urlparse, parse_qs
-from string import hexdigits
 
 from openprocurement.api.utils import get_now, set_parent, get_schematics_document
 from openprocurement.api.models import Item as BaseItem
@@ -19,7 +17,7 @@ from openprocurement.api.models import (
     plain_role, schematics_default_role, schematics_embedded_role
 )
 
-from openprocurement.api.models import Document as BaseDocument
+from openprocurement.api.models import Document as BaseDocument, Value as BaseValue, Period as BasePeriod
 from openprocurement.api.models import Organization as BaseOrganization
 from openprocurement.api.models import ContactPoint as BaseContactPoint
 from openprocurement.tender.core.models import Administrator_role
@@ -140,8 +138,24 @@ class Offense(Answer):
     ]))
 
 
+class Tender(SchematicsDocument, Model):
+    title = StringType(required=True)
+    value = ModelType(BaseValue, required=True)
+    tenderID = StringType()
+    date_published = IsoDateTimeType()
+    procurementMethodType = StringType()
+
+
 class Conclusion(Answer):
+    audit_id = StringType(required=True)
+    tender = ModelType(Tender, required=True)
     status = StringType(choices=['appealed', 'not_appealed'], default='not_appealed')
+    customer = ModelType(Organization, required=True)
+    procurementMethodType = StringType()
+    grounds = ListType(StringType(choices=['indicator', 'authorities', 'media', 'fiscal', 'public']), default=list())
+    period = ModelType(BasePeriod)
+    monitoring_results = StringType()
+    obligation = StringType()
 
 
 class Audit(SchematicsDocument, Model):
@@ -155,7 +169,9 @@ class Audit(SchematicsDocument, Model):
     date_finished = IsoDateTimeType()
     _attachments = DictType(DictType(BaseType), default=dict())  # couchdb attachments
     tender_id = StringType(required=True)
-    grounds = ListType(StringType(choices=['indicator', 'authorities', 'media', 'fiscal', 'public']), default=[])
+    procurementMethodType = StringType()
+    grounds = ListType(StringType(choices=['indicator', 'authorities', 'media', 'fiscal', 'public']), default=list())
+    period = ModelType(BasePeriod)
     owner_token = StringType(default=lambda: uuid4().hex)
     owner = StringType()
     mode = StringType(choices=['test'])
