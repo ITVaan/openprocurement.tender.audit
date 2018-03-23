@@ -1,3 +1,4 @@
+# coding=utf-8
 from schematics.exceptions import ModelValidationError, ModelConversionError
 
 from openprocurement.api.utils import update_logging_context, error_handler, apply_data_patch
@@ -5,6 +6,9 @@ from openprocurement.api.validation import validate_json_data
 
 from openprocurement.tender.audit.utils import check_tender_exists
 from openprocurement.tender.audit.models import Audit
+from logging import getLogger
+
+logger = getLogger("{}.init".format(__name__))
 
 
 def validate_data(request, model, partial=False, data=None):
@@ -27,12 +31,12 @@ def validate_data(request, model, partial=False, data=None):
             m.validate()
             method = m.serialize
             role = 'create'
-    except (ModelValidationError, ModelConversionError), e:
+    except (ModelValidationError, ModelConversionError) as e:
         for i in e.message:
             request.errors.add('body', i, e.message[i])
         request.errors.status = 422
         raise error_handler(request.errors)
-    except ValueError, e:
+    except ValueError as e:
         request.errors.add('body', 'data', e.message)
         request.errors.status = 422
         raise error_handler(request.errors)
@@ -53,10 +57,11 @@ def validate_data(request, model, partial=False, data=None):
 
 
 def validate_audit_data(request):
+    logger.info("validating audit data")
     update_logging_context(request, {'audit_id': '__new__'})
     data = request.validated['json_data'] = validate_json_data(request)
 
-    check_tender_exists(request, data.get('tender_id'))
+    # check_tender_exists(request, data.get('tender_id'))
     model = request.audit_from_data(data, create=False)
 
     return validate_data(request, model, data=data)

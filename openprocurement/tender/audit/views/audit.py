@@ -4,12 +4,28 @@ from openprocurement.api.utils import (
 
 from openprocurement.tender.audit.utils import auditresource, save_audit, apply_patch
 from openprocurement.tender.audit.validation import validate_audit_data, validate_patch_audit_data
+from openprocurement.tender.audit.design import audits_all_view
+from logging import getLogger
 
+
+logger = getLogger("{}.init".format(__name__))
 
 @auditresource(name='Audits', path='/audits', description='Audits')
 class AuditsResource(APIResource):
     def __init__(self, request, context):
         super(AuditsResource, self).__init__(request, context)
+
+    @json_view(content_type='application/json', permission='view_audit')
+    def get(self):
+        res = audits_all_view(self.db)
+        for x in res:
+            logger.info("x= {}".format(x))
+        results = [
+            (dict([(i, j) for i, j in x.value.items() + [('id', x.id), ('date_modified', x.key)]]), x.key)
+            for x in res
+        ]
+
+        return {"data": results}
 
     @json_view(content_type='application/json', permission='create_audit', validators=(validate_audit_data,))
     def post(self):

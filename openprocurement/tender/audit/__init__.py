@@ -5,6 +5,9 @@ import os
 
 from couchdb.http import extract_credentials, Unauthorized
 # from openprocurement.tender.audit.design import sync_design
+from openprocurement.api.auth import authenticated_role
+from openprocurement.api.utils import request_params
+from openprocurement.tender.audit.design import sync_design
 from pyramid.settings import asbool
 from pkg_resources import get_distribution
 # from auth import authenticated_role
@@ -25,6 +28,18 @@ LOGGER = getLogger(PKG.project_name)
 class Server(CouchdbServer):
     _uuid = None
 
+    @property
+    def uuid(self):
+        """The uuid of the server.
+
+        :rtype: basestring
+        """
+        if self._uuid is None:
+            _, _, data = self.resource.get_json()
+            self._uuid = data['uuid']
+        return self._uuid
+
+
 def main(global_config, **settings):
     LOGGER.info('Init tender audit plugin.')
 
@@ -39,6 +54,8 @@ def main(global_config, **settings):
     )
     config.include('pyramid_exclog')
     config.include("cornice")
+    config.add_request_method(request_params, 'params', reify=True)
+    config.add_request_method(authenticated_role, reify=True)
 
     db_name = os.environ.get('DB_NAME', settings['couchdb.db_name'])
     server = Server(settings.get('couchdb.url'), session=Session(retry_delays=range(10)))
@@ -51,8 +68,10 @@ def main(global_config, **settings):
     if db_name not in server:
         server.create(db_name)
     db = server[db_name]
-    # sync_design(db)
+    sync_design(db)
     config.registry.db = db
+    config.registry.server_id = settings.get('id', '')
+    config.registry.update_after = asbool(settings.get('update_after', True))
     config.registry.tender_id = {}
     config.add_request_method(extract_audit, 'audit', reify=True)
     config.add_request_method(audit_from_data)

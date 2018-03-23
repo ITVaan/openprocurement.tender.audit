@@ -1,6 +1,8 @@
 import logging
 
 from functools import partial
+from json import dumps
+
 from cornice.resource import resource
 
 from schematics.exceptions import ModelValidationError
@@ -19,6 +21,23 @@ from openprocurement.api.utils import (
 from openprocurement.tender.audit.traversal import factory
 from openprocurement.tender.audit.models import Audit
 
+#
+#
+#
+# def error_handler(request, status, error):
+#     params = {
+#         'ERROR_STATUS': status
+#     }
+#     for key, value in error.items():
+#         params['ERROR_{}'.format(key)] = str(value)
+#     logger.info('Error on processing request "{}"'.format(dumps(error)),
+#                 extra=context_unpack(request, {'MESSAGE_ID': 'error_handler'}, params))
+#     request.response.status = status
+#     request.response.content_type = 'application/json'
+#     return {
+#         "status": "error",
+#         "errors": [error]
+#     }
 
 auditresource = partial(resource, error_handler=error_handler, factory=factory)
 
@@ -42,7 +61,6 @@ def read_users(filename):
             )
             for j, k in config.items(i)
         ]))
-
 
 
 def audit_from_data(request, data, raise_error=True, create=True):
@@ -89,6 +107,7 @@ def auth_check(username, password, request):
     if username in USERS and USERS[username]['password'] == sha512(password).hexdigest():
         return ['g:{}'.format(USERS[username]['group'])]
 
+
 def extract_audit(request):
     db = request.registry.db
     audit_id = request.matchdict['audit_id']
@@ -123,4 +142,3 @@ def apply_patch(request, data=None, save=True, src=None):
         request.context.import_data(patch)
         if save:
             return save_audit(request)
-
