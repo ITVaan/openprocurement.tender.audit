@@ -135,7 +135,7 @@ class Offense(Answer):
         'corruptionDescription', 'corruptionProcurementMethodType', 'corruptionPublicDisclosure',
         'corruptionBiddingDocuments', 'documentsForm', 'corruptionAwarded', 'corruptionCancelled',
         'corruptionContracting', 'corruptionChanges', 'other'
-    ]))
+    ]), required=True)
 
 
 class Tender(SchematicsDocument, Model):
@@ -170,7 +170,10 @@ class Audit(SchematicsDocument, Model):
     _attachments = DictType(DictType(BaseType), default=dict())  # couchdb attachments
     tender_id = StringType(required=True)
     procurementMethodType = StringType()
-    grounds = ListType(StringType(choices=['indicator', 'authorities', 'media', 'fiscal', 'public']), default=list())
+    grounds = ListType(
+        StringType(choices=['indicator', 'authorities', 'media', 'fiscal', 'public']), required=True
+    )
+    procurement_stage = ListType(StringType(choices=['planing', 'awarding', 'contracting']), required=True)
     period = ModelType(BasePeriod)
     owner_token = StringType(default=lambda: uuid4().hex)
     owner = StringType()
