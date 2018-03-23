@@ -133,7 +133,11 @@ class Answer(Model):
 
 class Offense(Answer):
     status = StringType(choices=['fixed', 'not_fixed', 'partially_fixed'], default='not_fixed')
-    typical_offenses = ListType(StringType)
+    typical_offenses = ListType(StringType(choices=[
+        'corruptionDescription', 'corruptionProcurementMethodType', 'corruptionPublicDisclosure',
+        'corruptionBiddingDocuments', 'documentsForm', 'corruptionAwarded', 'corruptionCancelled',
+        'corruptionContracting', 'corruptionChanges', 'other'
+    ]))
 
 
 class Conclusion(Answer):
@@ -151,6 +155,7 @@ class Audit(SchematicsDocument, Model):
     date_finished = IsoDateTimeType()
     _attachments = DictType(DictType(BaseType), default=dict())  # couchdb attachments
     tender_id = StringType(required=True)
+    grounds = ListType(StringType(choices=['indicator', 'authorities', 'media', 'fiscal', 'public']), default=[])
     owner_token = StringType(default=lambda: uuid4().hex)
     owner = StringType()
     mode = StringType(choices=['test'])
