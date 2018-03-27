@@ -115,6 +115,7 @@ class Change(Model):
 
 class Document(BaseDocument):
     """ Audit Document """
+    status = StringType(choices=['draft'], default='draft')
     documentType = StringType(choices=["startMonitoring", "suit", "stopMonitoring", ""])
     documentOf = StringType(
         required=True, choices=['audit', 'change'], default='audit'
@@ -123,10 +124,20 @@ class Document(BaseDocument):
 
 class Answer(Model):
     """Answer to complaint"""
+    class Options:
+        roles = {
+            'create': whitelist('description', 'documents', 'answerType'),
+            'edit': whitelist('description',),
+            'view': schematics_default_role
+        }
 
+    id = MD5Type(required=True, default=lambda: uuid4().hex)
+    document_id = StringType()
+    answer_to = StringType()
     description = StringType()
     documents = ListType(ModelType(Document), default=list())
-    dateCreated = IsoDateTimeType()
+    answerType = StringType(choices=["requestExplanation", "responseConclusion", "explanationConclusion"])
+    dateCreated = IsoDateTimeType(default=get_now)
 
 
 class Offense(Answer):
@@ -181,6 +192,7 @@ class Audit(SchematicsDocument, Model):
     status = StringType(choices=['terminated', 'draft', 'published'], default='draft')
     changes = ListType(ModelType(Change), default=list())
     documents = ListType(ModelType(Document), default=list())
+    answers = ListType(ModelType(Answer), default=list())
     termination_details = StringType()
 
     class Options:
@@ -233,5 +245,12 @@ class Audit(SchematicsDocument, Model):
     def doc_id(self):
         """A property that is serialized by schematics exports."""
         return self._id
+
+    def validate_answers(self, data, answers):
+        if len([answer for answer in answers if answer['answerType'] == 'responseConclusion']) > 1:
+            raise ValidationError('An answer to a request for a conclusion may only be given once')
+
+        if len([answer for answer in answers if answer['answerType'] == 'explanationConclusion']) > 1:
+            raise ValidationError('An answer to a request for a explanation conclusion may only be given once')
 
 

@@ -4,7 +4,7 @@ from openprocurement.api.utils import update_logging_context, error_handler, app
 from openprocurement.api.validation import validate_json_data
 
 from openprocurement.tender.audit.utils import check_tender_exists
-from openprocurement.tender.audit.models import Audit
+from openprocurement.tender.audit.models import Audit, Answer
 
 
 def validate_data(request, model, partial=False, data=None):
@@ -64,3 +64,15 @@ def validate_audit_data(request):
 
 def validate_patch_audit_data(request):
     return validate_data(request, Audit, True)
+
+
+def validate_patch_answer_data(request):
+    return validate_data(request, Answer, True)
+
+
+def validate_answer_data(request):
+    update_logging_context(request, {'answer_id': '__new__'})
+    model = type(request.audit).answers.model_class
+
+    answer = validate_data(request, model)
+    return answer

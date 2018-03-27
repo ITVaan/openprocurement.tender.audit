@@ -14,12 +14,15 @@ class AuditsResource(APIResource):
     @json_view(content_type='application/json', permission='create_audit', validators=(validate_audit_data,))
     def post(self):
         audit = self.request.validated.get('audit')
+
         for i in self.request.validated['json_data'].get('documents', []):
             doc = type(audit).documents.model_class(i)
             doc.__parent__ = audit
             audit.documents.append(doc)
+
         self.request.validated['audit'] = audit
         self.request.validated['audit_src'] = {}
+
         if save_audit(self.request):
             self.LOGGER.info(
                 'Created audit {}, (TenderID: {})'.format(audit.id, audit.tender_id),
