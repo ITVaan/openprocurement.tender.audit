@@ -57,6 +57,9 @@ audit_view_role = (whitelist(
     'amountPaid', 'terminationDetails', 'audit_amountPaid',
 ))
 
+draft_role = whitelist('status')
+published_role = whitelist('status')
+
 audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
 
 
@@ -136,7 +139,9 @@ class Answer(Model):
     answer_to = StringType()
     description = StringType()
     documents = ListType(ModelType(Document), default=list())
-    answerType = StringType(choices=["requestExplanation", "responseConclusion", "explanationConclusion"])
+    answerType = StringType(choices=[
+        "requestExplanation", "responseConclusion", "explanationConclusion", "stopMonitoringDecision"
+    ])
     dateCreated = IsoDateTimeType(default=get_now)
 
 
@@ -201,6 +206,8 @@ class Audit(SchematicsDocument, Model):
             'create': audit_create_role,
             'edit_active': audit_edit_role,
             'edit_terminated': whitelist(),
+            'edit_draft': draft_role,
+            'edit_published': published_role,
             'view': audit_view_role,
             'Administrator': audit_administrator_role,
             'default': schematics_default_role,

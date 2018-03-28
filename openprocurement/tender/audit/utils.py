@@ -92,6 +92,12 @@ def check_tender_exists(request, tender_id):
 
 def apply_patch(request, data=None, save=True, src=None):
     data = request.validated['data'] if data is None else data
+
+    if data.get('status') == 'published':
+        data.update({'date_published': get_now()})
+    elif data.get('status') == 'terminated':
+        data.update({'date_finished': get_now()})
+
     patch = data and apply_data_patch(src or request.context.serialize(), data)
     if patch:
         request.context.import_data(patch)
