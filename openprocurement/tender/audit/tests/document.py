@@ -3,14 +3,9 @@ from email.header import Header
 
 from openprocurement.tender.audit.tests.base import BaseAuditWebTest
 
-
 class AuditDocumentResourceTest(BaseAuditWebTest):
     docservice = False
     initial_auth = ('Basic', ('broker', 'broker'))
-
-    # test_create_audit_document = snitch(create_audit_document)
-    # test_put_audit_document = snitch(put_audit_document)
-    # test_patch_audit_document = snitch(patch_audit_document)
 
     def test_create_audit_document(self):
         response = self.app.get('/audits/{}/documents'.format(self.audit_id))
@@ -66,6 +61,32 @@ class AuditDocumentResourceTest(BaseAuditWebTest):
         self.assertEqual(response.status, '200 OK')
         self.assertEqual(response.content_type, 'application/json')
 
+class AuditDocumentWithDSResourceTest(AuditDocumentResourceTest):
+    docservice = True
+
+    def test_create_audit_document_json(self):
+        response = self.app.post_json(
+            '/audits/{}/documents?acc_token={}'.format(self.audit_id, self.audit_token),
+            {'data': {
+                'title': u'Рішення про початок моніторингу.pdf',
+                'url': self.generate_docservice_url(),
+                'hash': 'md5:' + '0' * 32,
+                'format': 'application/pdf',
+                'description': u'Рішення про початок моніторингу'
+            }}
+        )
+        self.assertEqual(response.status, '201 Created')
+        self.assertEqual(response.content_type, 'application/json')
+        document = response.json["data"]
+        # doc_id = document['id']
+        self.assertEqual(document['description'], u'Рішення про початок моніторингу')
+
+
+# def suite():
+#     suite = unittest.TestSuite()
+#     suite.addTest(unittest.makeSuite(AuditDocumentResourceTest))
+#     suite.addTest(unittest.makeSuite(AuditDocumentWithDSResourceTest))
+#     return suite
 
 # def suite():
 #     suite = unittest.TestSuite()

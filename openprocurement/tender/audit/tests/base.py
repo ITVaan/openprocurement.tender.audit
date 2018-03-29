@@ -123,6 +123,8 @@ test_audit_data = {
             u"telephone": u"0440000000"
         }
     },
+    u"grounds": [u"indicator"],
+    u"procurement_stage": [u"planing"],
     u"title": u"Test title",
     u"tender_id": uuid4().hex,
     u"id": uuid4().hex,

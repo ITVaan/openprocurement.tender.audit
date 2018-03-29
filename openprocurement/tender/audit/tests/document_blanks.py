@@ -1,4 +1,4 @@
-# # -*- coding: utf-8 -*-
+# # coding=utf-8
 # from email.header import Header
 #
 #
@@ -9,9 +9,27 @@
 #     self.assertEqual(response.json, {'data': []})
 #
 #     response = self.app.post('/audits/{}/documents?acc_token={}'.format(
-#         self.audit_id, self.audit_token), upload_files=[('file', u'укр.doc', 'content')])
+#         self.audit_id, self.audit_token), upload_files=[('file', u'Рішення про початок моніторингу.pdf', 'content')])
 #     self.assertEqual(response.status, '201 Created')
 #     self.assertEqual(response.content_type, 'application/json')
+#
+#
+# def create_audit_document_json(self):
+#     response = self.app.post_json(
+#         '/audits/{}/documents?acc_token={}'.format(self.audit_id, self.audit_token),
+#         {'data': {
+#             'title': u'Рішення про початок моніторингу.pdf',
+#             'url': self.generate_docservice_url(),
+#             'hash': 'md5:' + '0' * 32,
+#             'format': 'application/pdf',
+#             'description': u'Рішення про початок моніторингу'
+#         }}
+#     )
+#     self.assertEqual(response.status, '201 Created')
+#     self.assertEqual(response.content_type, 'application/json')
+#     document = response.json["data"]
+#     # doc_id = document['id']
+#     self.assertEqual(document['description'], u'Рішення про початок моніторингу')
 #
 #
 # def put_audit_document(self):
