@@ -43,6 +43,8 @@ def factory(request):
         return get_item(audit, 'document', request)
     if request.matchdict.get('change_id'):
         return get_item(audit, 'change', request)
+    if request.matchdict.get('answer_id'):
+        return get_item(audit, 'answer', request)
     request.validated['id'] = request.matchdict['audit_id']
 
     return audit
