@@ -104,8 +104,11 @@ def save_audit(request):
 
 
 def auth_check(username, password, request):
-    if username in USERS and USERS[username]['password'] == sha512(password).hexdigest():
-        return ['g:{}'.format(USERS[username]['group'])]
+    res = []
+    if username in USERS:
+        res.append('g:{}'.format(USERS[username]['group']))
+        logger.info("res = {}".format(res))
+    return res
 
 
 def extract_audit(request):
