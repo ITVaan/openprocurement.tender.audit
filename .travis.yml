@@ -7,9 +7,9 @@ env:
 cache:
   directories:
     - eggs
+services:
+  - couchdb
 before_install:
-  services:
-    - couchdb
   - pip install setuptools==7.0
   - python2 bootstrap.py
 before_script:
