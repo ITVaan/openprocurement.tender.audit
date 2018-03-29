@@ -7,8 +7,8 @@ from openprocurement.tender.audit.validation import validate_audit_data, validat
 from openprocurement.tender.audit.design import audits_all_view
 from logging import getLogger
 
-
 logger = getLogger("{}.init".format(__name__))
+
 
 @auditresource(name='Audits', path='/audits', description='Audits')
 class AuditsResource(APIResource):
@@ -29,6 +29,7 @@ class AuditsResource(APIResource):
 
     @json_view(content_type='application/json', permission='create_audit', validators=(validate_audit_data,))
     def post(self):
+        logger.info("posting audit")
         audit = self.request.validated.get('audit')
         for i in self.request.validated['json_data'].get('documents', []):
             doc = type(audit).documents.model_class(i)
@@ -60,11 +61,12 @@ class AuditResource(AuditsResource):
     def get(self):
         return {'data': self.request.validated['audit'].serialize('view')}
 
-    @json_view(permission='edit_audit', validators=(validate_patch_audit_data,))
+    @json_view(permission='view_audit', validators=(validate_patch_audit_data,))
     def patch(self):
         """
         Audit Edit (partial)
         """
+        logger.info("patching audit")
         audit = self.request.validated['audit']
         apply_patch(self.request, save=False, src=self.request.validated['audit_src'])
 
@@ -74,6 +76,3 @@ class AuditResource(AuditsResource):
                 extra=context_unpack(self.request, {'MESSAGE_ID': 'audit_patch'})
             )
             return {'data': audit.serialize('view')}
-
-
-

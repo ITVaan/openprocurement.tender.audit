@@ -1,15 +1,24 @@
 # -*- coding: utf-8 -*-
 
 import os
+import subprocess
 import unittest
 import webtest
 from base64 import b64encode
 from copy import deepcopy
+
+# from circus.stream import FileStream
 from requests.models import Response
 from urllib import urlencode
 from uuid import uuid4
 from datetime import datetime, timedelta
+from time import sleep
+
 from openprocurement.api.constants import VERSION, SESSION, SANDBOX_MODE
+from logging import getLogger
+
+logger = getLogger("{}.init".format(__name__))
+
 
 
 now = datetime.now()
@@ -156,10 +165,39 @@ class BaseWebTest(unittest.TestCase):
     Base Web Test to test openprocurement.tender.audit.
     It setups the database before each test and delete it after.
     """
-    initial_auth = ('Basic', ('token', ''))
+    initial_auth = ('Basic', ('broker', ''))
+    initial_data = test_audit_data
     docservice = False
+    relative_to = os.path.dirname(__file__)
+    db_process = None
+
+    @classmethod
+    def setUpClass(cls):
+        cls.stdout = open('couchdb.stdout.log', 'a')
+        cls.stderr = open('couchdb.stderr.log', 'a')
+        logger.info("relative_to {}".format(cls.relative_to))
+        cls.db_process = subprocess.Popen(['couchdb',
+                                           '-a', cls.relative_to + '/couchdb.ini',
+                                           '-o', cls.relative_to + '/couchdb.stdout.log',
+                                           '-e', cls.relative_to + '/couchdb.stderr.log'],
+                                          stderr=cls.stdout,
+                                          stdout=cls.stderr)
+        sleep(1)
+        logger.info("db initialized")
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            cls.db_process.terminate()
+            cls.db_process.wait()
+        except:
+            pass
+        cls.stdout.close()
+        cls.stderr.close()
+        sleep(1)
 
     def setUp(self):
+        logger.info("setting up")
         self.app = webtest.TestApp("config:tests.ini", relative_to=os.path.dirname(__file__))
         self.app.RequestClass = PrefixedRequestClass
         self.app.authorization = self.initial_auth
@@ -167,6 +205,8 @@ class BaseWebTest(unittest.TestCase):
         self.db = self.app.app.registry.db
         if self.docservice:
             self.setUpDS()
+        else:
+            self.app.app.registry.docservice_url = None
 
     def setUpDS(self):
         self.app.app.registry.docservice_url = 'http://localhost'
@@ -214,18 +254,19 @@ class BaseAuditWebTest(BaseWebTest):
         data = deepcopy(self.initial_data)
 
         orig_auth = self.app.authorization
-        self.app.authorization = ('Basic', ('broker', ''))
+        self.app.authorization = ('Basic', ('broker', 'broker'))
 
         # Create tender
-        response = self.app.post_json('/tenders', {"data": test_tender_data})
-        self.assertEqual(response.status, '201 Created')
-        self.assertEqual(response.content_type, 'application/json')
-        tender = response.json['data']
-        tender_id = tender['id']
+        # response = self.app.post_json('/tenders', {"data": test_tender_data})
+        # self.assertEqual(response.status, '201 Created')
+        # self.assertEqual(response.content_type, 'application/json')
+        # tender = response.json['data']
+        # tender_id = tender['id']
+        tender_id = uuid4().hex
 
         # Create audit
         data.update({'tender_id': tender_id})
-        response = self.app.post_json('/audits', {'data': data})
+        response = self.app.post_json('/audits', {'data': data}, headers={"Authorization": "Basic YnJva2VyOmJyb2tlcg=="})
         self.audit = response.json['data']
         self.audit_id = self.audit['id']
         self.audit_token = self.audit['owner_token']

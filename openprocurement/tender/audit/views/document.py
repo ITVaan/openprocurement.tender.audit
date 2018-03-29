@@ -1,3 +1,4 @@
+# coding=utf-8
 from openprocurement.api.utils import (
     APIResource, json_view, upload_file, context_unpack, get_file, update_file_content_type
 )

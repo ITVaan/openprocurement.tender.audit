@@ -22,7 +22,7 @@ from openprocurement.api.models import (
 from openprocurement.api.models import Document as BaseDocument
 from openprocurement.api.models import Organization as BaseOrganization
 from openprocurement.api.models import ContactPoint as BaseContactPoint
-from openprocurement.tender.core.models import Administrator_role
+# from openprocurement.tender.core.models import Administrator_role
 
 item_edit_role = whitelist(
     'description', 'description_en', 'description_ru', 'unit', 'deliveryDate',
@@ -59,7 +59,7 @@ audit_view_role = (whitelist(
     'amountPaid', 'terminationDetails', 'audit_amountPaid',
 ))
 
-audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
+# audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
 
 
 class ContactPoint(BaseContactPoint):
@@ -166,7 +166,7 @@ class Audit(SchematicsDocument, Model):
             'edit_active': audit_edit_role,
             'edit_terminated': whitelist(),
             'view': audit_view_role,
-            'Administrator': audit_administrator_role,
+            # 'Administrator': audit_administrator_role,
             'default': schematics_default_role,
         }
 

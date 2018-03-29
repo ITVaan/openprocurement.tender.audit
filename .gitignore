@@ -99,3 +99,16 @@ ENV/
 
 # mypy
 .mypy_cache/
+/src/openprocurement.tender.audit/couchdb.stderr
+/src/openprocurement.tender.audit/couch.testing.log
+/src/openprocurement.tender.audit/couchdb.stdout
+/src/openprocurement.tender.audit/.mr.developer.cfg
+/openprocurement/tender/audit/tests/couchdb/
+/couchdb/
+/couchdb.stderr
+/bin/
+/couchdb.stdout
+/cover/
+/src/
+/erl_crash.dump
+/.mr.developer.cfg

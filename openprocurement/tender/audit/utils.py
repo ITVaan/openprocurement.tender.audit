@@ -89,11 +89,11 @@ def save_audit(request):
     audit.date_modified = get_now()
     try:
         audit.store(request.registry.db)
-    except ModelValidationError, e:
+    except ModelValidationError as e:
         for i in e.message:
             request.errors.add('body', i, e.message[i])
         request.errors.status = 422
-    except Exception, e:
+    except Exception as e:
         request.errors.add('body', 'data', str(e))
     else:
         logger.info('Saved audit {}: dateModified -> {}'.format(
@@ -112,11 +112,7 @@ def extract_audit(request):
     db = request.registry.db
     audit_id = request.matchdict['audit_id']
     doc = db.get(audit_id)
-    if doc is not None and doc.get('doc_type') == 'audit':
-        request.errors.add('url', 'audit_id', 'Archived')
-        request.errors.status = 410
-        raise error_handler(request.errors)
-    elif doc is None or doc.get('doc_type') != 'Audit':
+    if doc is None or doc.get('doc_type') != 'Audit':
         request.errors.add('url', 'audit_id', 'Not Found')
         request.errors.status = 404
         raise error_handler(request.errors)

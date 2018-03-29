@@ -12,7 +12,9 @@ logger = getLogger("{}.init".format(__name__))
 
 
 def validate_data(request, model, partial=False, data=None):
+    logger.info("validating data")
     if data is None:
+        logger.info("validating audit data; request role {}".format(request.context.get_role()))
         data = validate_json_data(request)
     try:
         if partial and isinstance(request.context, model):
@@ -42,6 +44,7 @@ def validate_data(request, model, partial=False, data=None):
         raise error_handler(request.errors)
     else:
         if hasattr(type(m), '_options') and role not in type(m)._options.roles:
+            logger.info("403 will be returned because role {}".format(role))
             request.errors.add('url', 'role', 'Forbidden')
             request.errors.status = 403
             raise error_handler(request.errors)
@@ -57,15 +60,17 @@ def validate_data(request, model, partial=False, data=None):
 
 
 def validate_audit_data(request):
-    logger.info("validating audit data")
     update_logging_context(request, {'audit_id': '__new__'})
     data = request.validated['json_data'] = validate_json_data(request)
 
     # check_tender_exists(request, data.get('tender_id'))
     model = request.audit_from_data(data, create=False)
+    # logger.info("validating audit data; request role {}".format(request.context.get_role()))
 
     return validate_data(request, model, data=data)
 
 
 def validate_patch_audit_data(request):
+    logger.info("validating patch audit; request role {}".format(request.context.get_role()))
     return validate_data(request, Audit, True)
+

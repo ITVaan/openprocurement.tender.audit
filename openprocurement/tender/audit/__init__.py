@@ -4,13 +4,11 @@
 import os
 
 from couchdb.http import extract_credentials, Unauthorized
-# from openprocurement.tender.audit.design import sync_design
 from openprocurement.api.auth import authenticated_role
 from openprocurement.api.utils import request_params
 from openprocurement.tender.audit.design import sync_design
 from pyramid.settings import asbool
 from pkg_resources import get_distribution
-# from auth import authenticated_role
 from traversal import Root
 from pyramid.authentication import BasicAuthAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
@@ -20,10 +18,12 @@ from pyramid.renderers import JSON, JSONP
 from openprocurement.tender.audit.utils import audit_from_data, extract_audit, auth_check, read_users
 from logging import getLogger
 from couchdb import Server as CouchdbServer, Session
-    # ROUTE_PREFIX, VERSION
+
+# ROUTE_PREFIX, VERSION
 
 PKG = get_distribution(__package__)
 LOGGER = getLogger(PKG.project_name)
+
 
 class Server(CouchdbServer):
     _uuid = None
@@ -50,7 +50,7 @@ def main(global_config, **settings):
         authentication_policy=BasicAuthAuthenticationPolicy(auth_check, __name__),
         authorization_policy=ACLAuthorizationPolicy(),
         root_factory=Root,
-        route_prefix="/api",
+        route_prefix="/api/2.4",
     )
     config.include('pyramid_exclog')
     config.include("cornice")

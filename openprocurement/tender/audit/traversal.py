@@ -14,6 +14,9 @@ class Root(object):
         (Allow, Everyone, 'view_listing'),
         (Allow, Everyone, 'view_audit'),
         (Allow, 'broker', 'create_audit'),
+        (Allow, 'broker', 'edit_active'),
+        (Allow, 'broker', 'edit_audit'),
+        (Allow, 'broker', 'upload_audit_documents'),
         (Allow, 'g:Administrator', 'edit_audit'),
         (Allow, 'g:admins', ALL_PERMISSIONS),
     ]

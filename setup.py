@@ -9,8 +9,11 @@ requires = [
 
 test_requires = requires + [
     'webtest',
-    'python-coveralls',
-    'openprocurement.tender.belowthreshold',
+    'python-coveralls==2.5.0',
+    'mock==1.0.1',
+    'bottle',
+    'requests_mock',
+    'coverage==3.7.1'
 ]
 
 docs_requires = requires + [
@@ -23,9 +26,9 @@ api_requires = requires + [
 ]
 
 entry_points = {
-    'openprocurement.api.plugins': [
-        'audit = openprocurement.tender.audit:includeme'
-    ],
+    # 'openprocurement.api.plugins': [
+    #     'audit = openprocurement.tender.audit:includeme'
+    # ],
     'paste.app_factory': [
         'main = openprocurement.tender.audit:main'
     ],
