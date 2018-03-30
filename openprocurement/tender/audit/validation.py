@@ -23,7 +23,8 @@ def validate_data(request, model, partial=False, data=None):
             new_patch = apply_data_patch(initial_data, data)
             if new_patch:
                 m.import_data(new_patch, partial=True, strict=True)
-            m.__parent__ = request.context.__parent__
+            # m.__parent__ = request.context.__parent__
+            m.__parent__ = model(initial_data)
             m.validate()
             role = request.context.get_role()
             method = m.to_patch
@@ -49,7 +50,7 @@ def validate_data(request, model, partial=False, data=None):
             request.errors.status = 403
             raise error_handler(request.errors)
         else:
-            # data = method(role)
+            data = method(role)
             request.validated['data'] = data
             if not partial:
                 m = model(data)

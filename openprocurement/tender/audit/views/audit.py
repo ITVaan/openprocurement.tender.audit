@@ -64,7 +64,7 @@ class AuditResource(AuditsResource):
     def get(self):
         return {'data': self.request.validated['audit'].serialize('view')}
 
-    @json_view(permission='view_audit', validators=(validate_patch_audit_data,))
+    @json_view(permission='edit_audit', validators=(validate_patch_audit_data,))  # Change from permission='edit_audit'
     def patch(self):
         """
         Audit Edit (partial)
@@ -79,3 +79,6 @@ class AuditResource(AuditsResource):
                 extra=context_unpack(self.request, {'MESSAGE_ID': 'audit_patch'})
             )
             return {'data': audit.serialize('view')}
+
+
+
