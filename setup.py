@@ -12,7 +12,7 @@ test_requires = requires + [
     'python-coveralls==2.5.0',
     'mock==1.0.1',
     'bottle',
-    'requests_mock',
+    'requests_mock==1.3.0',
     'coverage==3.7.1'
 ]
 
