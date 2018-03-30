@@ -10,6 +10,7 @@ from schematics.types import StringType, BaseType, MD5Type
 from schematics.types.compound import ModelType, DictType
 from openprocurement.api.models import Model, ListType, Revision, IsoDateTimeType
 from schematics.types.serializable import serializable
+from zope.interface import implementer, Interface
 
 from openprocurement.api.utils import get_now, set_parent, get_schematics_document
 from openprocurement.api.models import Item as BaseItem
@@ -37,10 +38,11 @@ class Item(BaseItem):
 
 
 audit_create_role = (whitelist(
-    'id', 'awardID', 'auditID', 'auditNumber', 'title', 'title_en',
+    'id', 'awardID', 'auditID', 'auditNumber', 'author', 'title', 'title_en',
     'title_ru', 'description', 'description_en', 'description_ru', 'status',
     'period', 'value', 'dateSigned', 'items', 'suppliers',
-    'procuringEntity', 'owner', 'tender_token', 'tender_id', 'mode'
+    'procuringEntity', 'owner', 'tender_token', 'tender_id', 'mode',
+    'procurement_stage', 'grounds'
 ))
 
 audit_edit_role = (whitelist(
@@ -57,10 +59,10 @@ audit_view_role = (whitelist(
     'amountPaid', 'terminationDetails', 'audit_amountPaid',
 ))
 
-draft_role = whitelist('status')
-published_role = whitelist('status')
+draft_role = whitelist('status', 'title')
+published_role = whitelist('status', 'title')
 
-audit_administrator_role = (Administrator_role + whitelist('suppliers', ))
+audit_administrator_role = (Administrator_role + whitelist('suppliers', 'title'))
 
 
 class ContactPoint(BaseContactPoint):
@@ -174,6 +176,17 @@ class Conclusion(Answer):
     obligation = StringType()
 
 
+class IAudit(Interface):
+    """ Audit marker interface """
+
+
+def get_audit(model):
+    while not IAudit.providedBy(model):
+        model = model.__parent__
+    return model
+
+
+@implementer(IAudit)
 class Audit(SchematicsDocument, Model):
     """ audit """
     revisions = ListType(ModelType(Revision), default=list())
@@ -210,7 +223,7 @@ class Audit(SchematicsDocument, Model):
             'edit_published': published_role,
             'view': audit_view_role,
             'Administrator': audit_administrator_role,
-            'default': schematics_default_role,
+            'default': schematics_default_role
         }
 
     def __local_roles__(self):
@@ -260,4 +273,13 @@ class Audit(SchematicsDocument, Model):
         if len([answer for answer in answers if answer['answerType'] == 'explanationConclusion']) > 1:
             raise ValidationError('An answer to a request for a explanation conclusion may only be given once')
 
+    def validate_status(self, data, status):
+        if status and isinstance(data['__parent__'], Model):
+            current_status = data['__parent__'].get('status')
+
+            if status != current_status:
+                if status == 'published' and current_status != 'draft':
+                    raise ValidationError('Can\'t update audit in \'{}\' status'.format(current_status))
+                elif status == 'terminated' and current_status != 'published':
+                    raise ValidationError('Can\'t update audit in \'{}\' status'.format(current_status))
 
