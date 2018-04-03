@@ -285,7 +285,11 @@ class Audit(SchematicsDocument, Model):
 
             if status != current_status:
                 if status == 'published' and current_status != 'draft':
-                    raise ValidationError('Can\'t update audit in \'{}\' status'.format(current_status))
+                    raise ValidationError(
+                        'Can\'t change audit status from \'{}\' to \'{}\''.format(current_status, status)
+                    )
                 elif status == 'terminated' and current_status != 'published':
-                    raise ValidationError('Can\'t update audit in \'{}\' status'.format(current_status))
+                    raise ValidationError(
+                        'Can\'t change audit status from \'{}\' to \'{}\''.format(current_status, status)
+                    )
 

@@ -223,10 +223,10 @@ class BaseAuditWebTest(BaseWebTest):
         self.assertEqual(response.status, '201 Created')
         self.assertEqual(response.content_type, 'application/json')
         tender = response.json['data']
-        tender_id = tender['id']
+        self.tender_id = tender['id']
 
         # Create audit
-        data.update({'tender_id': tender_id})
+        data.update({'tender_id': self.tender_id})
         response = self.app.post_json('/audits', {'data': data})
         self.audit = response.json['data']
         self.audit_id = self.audit['id']

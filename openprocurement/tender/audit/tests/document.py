@@ -4,7 +4,7 @@ from openprocurement.api.tests.base import snitch
 from openprocurement.tender.audit.tests.base import BaseAuditWebTest
 
 from openprocurement.tender.audit.tests.document_blanks import (
-    create_audit_document, create_audit_document_json, put_audit_document, patch_audit_document
+    not_found, create_audit_document, create_audit_document_json, put_audit_document, patch_audit_document
 )
 
 
@@ -12,6 +12,7 @@ class AuditDocumentResourceTest(BaseAuditWebTest):
     docservice = False
     initial_auth = ('Basic', ('broker', ''))
 
+    test_not_found = snitch(not_found)
     test_create_audit_document = snitch(create_audit_document)
     test_put_audit_document = snitch(put_audit_document)
     test_patch_audit_document = snitch(patch_audit_document)
