@@ -167,6 +167,17 @@ def create_audit_document(self):
     self.assertEqual(response.status, '200 OK')
     self.assertEqual(response.json['data']['status'], 'terminated')
 
+    response = self.app.post(
+        '/audits/{}/documents?acc_token={}'.format(self.audit_id, self.audit_token),
+        upload_files=[(
+            'file', u'Рішення про початок моніторингу.pdf'.encode("ascii", "xmlcharrefreplace"), 'contentX'
+        )], status=403
+    )
+    self.assertEqual(response.status, '403 Forbidden')
+    self.assertEqual(response.json['errors'],
+                     [{u'description': u"Can't add document in current (terminated) contract status",
+                       u'location': u'body', u'name': u'data'}])
+
 
 def create_audit_document_json(self):
     response = self.app.post_json(
