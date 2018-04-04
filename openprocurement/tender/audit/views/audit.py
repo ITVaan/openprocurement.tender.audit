@@ -62,7 +62,7 @@ class AuditsResource(APIResource):
 class AuditResource(AuditsResource):
     @json_view(permission='view_audit')
     def get(self):
-        return {'data': self.request.validated['audit'].serialize('view')}
+        return {'data': self.request.validated['audit'].serialize('plain')}
 
     @json_view(permission='edit_audit', validators=(validate_patch_audit_data,))  # Change from permission='edit_audit'
     def patch(self):

@@ -2,9 +2,14 @@
 from openprocurement.api.utils import (
     APIResource, json_view, upload_file, context_unpack, get_file, update_file_content_type
 )
-from openprocurement.api.validation import validate_file_upload, validate_file_update, validate_patch_document_data
+from openprocurement.api.validation import (
+    validate_file_upload,
+    validate_file_update,
+    validate_patch_document_data
+)
 
 from openprocurement.tender.audit.utils import auditresource, save_audit, apply_patch
+from openprocurement.tender.audit.validation import validate_audit_document_operation_not_in_allowed_audit_status
 
 
 @auditresource(
@@ -41,7 +46,9 @@ class AuditDocumentResource(APIResource):
 
         return {'data': collection_data}
 
-    @json_view(permission='upload_audit_documents', validators=(validate_file_upload,))
+    @json_view(permission='upload_audit_documents', validators=(
+            validate_file_upload, validate_audit_document_operation_not_in_allowed_audit_status
+    ))
     def collection_post(self):
         """Audit Document Upload"""
         document = upload_file(self.request)
@@ -63,7 +70,9 @@ class AuditDocumentResource(APIResource):
 
             return {'data': document.serialize('view')}
 
-    @json_view(permission='upload_audit_documents', validators=(validate_file_update,))
+    @json_view(permission='upload_audit_documents', validators=(
+            validate_file_update, validate_audit_document_operation_not_in_allowed_audit_status
+    ))
     def put(self):
         """Audit Document Update"""
         document = upload_file(self.request)
@@ -76,7 +85,9 @@ class AuditDocumentResource(APIResource):
             return {'data': document.serialize('view')}
 
     @json_view(
-        content_type="application/json", permission='upload_audit_documents', validators=(validate_patch_document_data,)
+        content_type="application/json", permission='upload_audit_documents', validators=(
+                validate_patch_document_data, validate_audit_document_operation_not_in_allowed_audit_status
+        )
     )
     def patch(self):
         """Audit Document Update"""

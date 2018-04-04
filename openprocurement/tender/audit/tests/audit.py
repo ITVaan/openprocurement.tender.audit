@@ -6,7 +6,7 @@ from uuid import uuid4
 from openprocurement.api.tests.base import snitch
 
 from openprocurement.tender.audit.tests.base import BaseAuditWebTest
-# from openprocurement.tender.audit.tests.audit_blanks import patch_audit
+# from openprocurement.tender.audit.tests.audit_blanks import create_invalid_audit, create_audit, patch_audit
 
 
 class AuditResourceTest(BaseAuditWebTest):
@@ -31,6 +31,9 @@ class AuditResourceTest(BaseAuditWebTest):
         self.assertEqual(response.status, '200 OK')
         self.assertEqual(response.content_type, 'application/json')
         self.assertEqual(response.json['data']['title'], 'Test title')
+    # test_create_invalid_audit = snitch(create_invalid_audit)
+    # test_create_audit = snitch(create_audit)
+    # test_patch_audit = snitch(patch_audit)
 
         audit = response.json['data']
 
