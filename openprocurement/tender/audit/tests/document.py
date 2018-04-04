@@ -4,7 +4,13 @@ from openprocurement.api.tests.base import snitch
 from openprocurement.tender.audit.tests.base import BaseAuditWebTest
 
 from openprocurement.tender.audit.tests.document_blanks import (
-    not_found, create_audit_document, create_audit_document_json, put_audit_document, patch_audit_document
+    not_found,
+    create_audit_document,
+    put_audit_document,
+    patch_audit_document,
+    create_audit_document_json_invalid,
+    create_audit_document_json,
+    put_audit_document_json
 )
 
 
@@ -20,7 +26,9 @@ class AuditDocumentResourceTest(BaseAuditWebTest):
 
 class AuditDocumentWithDSResourceTest(AuditDocumentResourceTest):
     docservice = True
+    test_create_audit_document_json_invalid = snitch(create_audit_document_json_invalid)
     test_create_audit_document_json = snitch(create_audit_document_json)
+    test_put_audit_document_json = snitch(put_audit_document_json)
 
 
 def suite():

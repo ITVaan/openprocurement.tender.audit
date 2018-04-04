@@ -1,7 +1,7 @@
 from schematics.exceptions import ModelValidationError, ModelConversionError
 
-from openprocurement.api.utils import update_logging_context, error_handler, apply_data_patch
-from openprocurement.api.validation import validate_json_data
+from openprocurement.api.utils import update_logging_context, error_handler, apply_data_patch, raise_operation_error
+from openprocurement.api.validation import validate_json_data, OPERATIONS
 
 from openprocurement.tender.audit.utils import check_tender_exists
 from openprocurement.tender.audit.models import Audit, Answer, Offense
@@ -65,6 +65,15 @@ def validate_audit_data(request):
 
 def validate_patch_audit_data(request):
     return validate_data(request, Audit, True)
+
+
+def validate_audit_document_operation_not_in_allowed_audit_status(request):
+    if request.validated['audit'].status == 'terminated':
+        raise_operation_error(
+            request, 'Can\'t {} document in current ({}) audit status'.format(
+                OPERATIONS.get(request.method), request.validated['audit'].status
+            )
+        )
 
 
 def validate_patch_answer_data(request):
