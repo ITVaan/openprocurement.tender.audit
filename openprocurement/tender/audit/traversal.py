@@ -36,14 +36,18 @@ def factory(request):
 
     if request.method != 'GET':
         request.validated['audit_src'] = audit.serialize('plain')
-    if request.matchdict.get('document_id'):
-        return get_item(audit, 'document', request)
-    if request.matchdict.get('change_id'):
-        return get_item(audit, 'change', request)
     if request.matchdict.get('answer_id'):
-        return get_item(audit, 'answer', request)
-    if request.matchdict.get('offense_id'):
+        answer = get_item(audit, 'answer', request)
+        if request.matchdict.get('document_id'):
+            return get_item(answer, 'document', request)
+        else:
+            return answer
+    elif request.matchdict.get('offense_id'):
         return get_item(audit, 'offense', request)
+    elif request.matchdict.get('document_id'):
+        return get_item(audit, 'document', request)
+    elif request.matchdict.get('change_id'):
+        return get_item(audit, 'change', request)
     request.validated['id'] = request.matchdict['audit_id']
 
     return audit

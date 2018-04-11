@@ -57,7 +57,10 @@ def create_audit_invalid(self):
     response = self.app.post_json('/audits', {'data': data}, status=404)
     self.assertEqual(response.status, '404 Not Found')
     self.assertEqual(response.content_type, 'application/json')
-    self.assertEqual(response.json['errors'][0]['description'], 'Not Found')
+    self.assertEqual(
+        response.json['errors'][0],
+        {u'description': u'Not Found', u'location': u'url', u'name': u'tender_id'}
+    )
 
     response = self.app.post_json('/tenders', {'data': test_tender_data})
     self.assertEqual(response.status, '201 Created')
@@ -71,7 +74,10 @@ def create_audit_invalid(self):
     response = self.app.post_json('/audits', {'data': data}, status=422)
     self.assertEqual(response.status, '422 Unprocessable Entity')
     self.assertEqual(response.content_type, 'application/json')
-    self.assertEqual(response.json['errors'][0]['description'][0], 'This field is required.')
+    self.assertEqual(
+        response.json['errors'][0],
+        {u'description': [u'This field is required.'], u'location': u'body', u'name': u'grounds'}
+    )
 
     data.update({'grounds': 'some_ground'})
     response = self.app.post_json('/audits', {'data': data}, status=422)
