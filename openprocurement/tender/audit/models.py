@@ -131,14 +131,13 @@ class Answer(Model):
     """Answer to complaint"""
     class Options:
         roles = {
-            'create': whitelist('description', 'documents', 'answerType', 'typical_offenses'),
+            'create': whitelist('description', 'documents', 'answerType', 'typical_offenses', 'document_id'),
             'edit': whitelist('description', 'status'),
             'view': schematics_default_role
         }
 
     id = MD5Type(required=True, default=lambda: uuid4().hex)
     document_id = StringType()
-    answer_to = StringType(choices=['startMonitoringDecision', ''])
     description = StringType()
     documents = ListType(ModelType(Document), default=list())
     answerType = StringType(choices=[

@@ -3,8 +3,12 @@ from openprocurement.api.utils import (
 )
 
 from openprocurement.tender.audit.utils import auditresource, save_audit, apply_patch
-from openprocurement.tender.audit.validation import validate_audit_data, validate_patch_audit_data
 from openprocurement.tender.audit.design import audits_all_view
+from openprocurement.tender.audit.validation import (
+    validate_audit_data,
+    validate_patch_audit_data,
+    validate_audit_document_operation_not_in_allowed_audit_status
+)
 from logging import getLogger
 
 logger = getLogger("{}.init".format(__name__))
@@ -64,7 +68,9 @@ class AuditResource(AuditsResource):
     def get(self):
         return {'data': self.request.validated['audit'].serialize('plain')}
 
-    @json_view(permission='edit_audit', validators=(validate_patch_audit_data,))  # Change from permission='edit_audit'
+    @json_view(permission='edit_audit', validators=(
+            validate_patch_audit_data, validate_audit_document_operation_not_in_allowed_audit_status
+    ))
     def patch(self):
         """
         Audit Edit (partial)
