@@ -72,6 +72,7 @@ class AuditDocumentResourceTest(BaseAuditWebTest):
         self.assertEqual(response.status, '200 OK')
         self.assertEqual(response.content_type, 'application/json')
 
+
 class AuditDocumentWithDSResourceTest(AuditDocumentResourceTest):
     docservice = True
 
@@ -92,7 +93,6 @@ class AuditDocumentWithDSResourceTest(AuditDocumentResourceTest):
         # doc_id = document['id']
         self.assertEqual(document['description'], u'Рішення про початок моніторингу')
 
-
 # def suite():
 #     suite = unittest.TestSuite()
 #     suite.addTest(unittest.makeSuite(AuditDocumentResourceTest))
@@ -107,5 +107,3 @@ class AuditDocumentWithDSResourceTest(AuditDocumentResourceTest):
 #
 # if __name__ == '__main__':
 #     unittest.main(defaultTest='suite')
-
-

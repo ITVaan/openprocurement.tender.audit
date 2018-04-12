@@ -272,7 +272,7 @@ class BaseAuditWebTest(BaseWebTest):
         # self.tender_id = tender['id']
 
         # Create audit
-        data.update({'tender_id': self.tender_id})
+        data.update({'tender_id': tender_id})
         response = self.app.post_json('/audits', {'data': data}, headers={"Authorization": "Basic YnJva2VyOmJyb2tlcg=="})
         self.audit = response.json['data']
         self.audit_id = self.audit['id']
