@@ -85,7 +85,6 @@ def main(global_config, **settings):
     config.add_request_method(extract_audit, 'audit', reify=True)
     config.add_request_method(audit_from_data)
 
-
     # Document Service key
     config.registry.docservice_url = settings.get('docservice_url')
     config.registry.docservice_username = settings.get('docservice_username')

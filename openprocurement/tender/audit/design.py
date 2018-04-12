@@ -9,6 +9,7 @@ FIELDS = [
     'status'
 ]
 
+
 def add_index_options(doc):
     doc['options'] = {'local_seq': True}
 
