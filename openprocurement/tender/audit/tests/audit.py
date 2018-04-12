@@ -8,7 +8,7 @@ from uuid import uuid4
 from openprocurement.api.tests.base import snitch
 
 from openprocurement.tender.audit.tests.base import BaseAuditWebTest, BaseWebTest, test_audit_data, documents
-# from openprocurement.tender.audit.tests.audit_blanks import (
+from openprocurement.tender.audit.tests.audit_blanks import (
     create_audit_invalid,
     create_audit,
     audit_status_change,

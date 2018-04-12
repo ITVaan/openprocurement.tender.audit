@@ -1,4 +1,5 @@
 from copy import deepcopy
+from uuid import uuid4
 
 from openprocurement.tender.audit.tests.base import test_tender_data
 
@@ -354,12 +355,7 @@ def create_audit_with_documents(self):
 
     orig_auth = self.app.authorization
     self.app.authorization = ('Basic', ('broker', ''))
-
-    response = self.app.post_json('/tenders', {"data": test_tender_data})
-    self.assertEqual(response.status, '201 Created')
-    self.assertEqual(response.content_type, 'application/json')
-    tender = response.json['data']
-    tender_id = tender['id']
+    tender_id = uuid4().hex
 
     self.app.authorization = orig_auth
 
