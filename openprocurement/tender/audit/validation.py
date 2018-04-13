@@ -1,0 +1,108 @@
+# coding=utf-8
+from schematics.exceptions import ModelValidationError, ModelConversionError
+
+from openprocurement.api.utils import update_logging_context, error_handler, apply_data_patch, raise_operation_error
+from openprocurement.api.validation import validate_json_data, OPERATIONS
+
+from openprocurement.tender.audit.utils import check_tender_exists
+from openprocurement.tender.audit.models import Audit, Answer, Offense
+from logging import getLogger
+
+logger = getLogger("{}.init".format(__name__))
+
+
+def validate_data(request, model, partial=False, data=None):
+    logger.info("validating data")
+    if data is None:
+        logger.info("validating audit data; request role {}".format(request.context.get_role()))
+        data = validate_json_data(request)
+    try:
+        if partial and isinstance(request.context, model):
+            initial_data = request.context.serialize()
+            m = model(initial_data)
+            new_patch = apply_data_patch(initial_data, data)
+            if new_patch:
+                m.import_data(new_patch, partial=True, strict=True)
+            # m.__parent__ = request.context.__parent__
+            m.__parent__ = model(initial_data)
+            m.validate()
+            role = request.context.get_role()
+            method = m.to_patch
+        else:
+            m = model(data)
+            m.__parent__ = request.context
+            m.validate()
+            method = m.serialize
+            role = 'create'
+    except (ModelValidationError, ModelConversionError) as e:
+        for i in e.message:
+            request.errors.add('body', i, e.message[i])
+        request.errors.status = 422
+        raise error_handler(request.errors)
+    except ValueError as e:
+        request.errors.add('body', 'data', e.message)
+        request.errors.status = 422
+        raise error_handler(request.errors)
+    else:
+        if hasattr(type(m), '_options') and role not in type(m)._options.roles:
+            logger.info("403 will be returned because role {}".format(role))
+            request.errors.add('url', 'role', 'Forbidden')
+            request.errors.status = 403
+            raise error_handler(request.errors)
+        else:
+            data = method(role)
+            request.validated['data'] = data
+            if not partial:
+                m = model(data)
+                m.__parent__ = request.context
+                request.validated[model.__name__.lower()] = m
+        data = method(role)
+    return data
+
+
+def validate_audit_data(request):
+    update_logging_context(request, {'audit_id': '__new__'})
+    data = request.validated['json_data'] = validate_json_data(request)
+
+    # check_tender_exists(request, data.get('tender_id'))
+    model = request.audit_from_data(data, create=False)
+
+    return validate_data(request, model, data=data)
+
+
+def validate_patch_audit_data(request):
+    logger.info("validating patch audit; request role {}".format(request.context.get_role()))
+    return validate_data(request, Audit, True)
+
+
+def validate_audit_document_operation_not_in_allowed_audit_status(request):
+    if request.validated['audit'].status == 'terminated':
+        raise_operation_error(
+            request, 'Can\'t {} document in current ({}) audit status'.format(
+                OPERATIONS.get(request.method), request.validated['audit'].status
+            )
+        )
+
+
+def validate_patch_answer_data(request):
+    return validate_data(request, Answer, True)
+
+
+def validate_patch_offense_data(request):
+    return validate_data(request, Offense, True)
+
+
+def validate_answer_data(request):
+    update_logging_context(request, {'answer_id': '__new__'})
+    model = type(request.audit).answers.model_class
+
+    answer = validate_data(request, model)
+    return answer
+
+
+def validate_offense_data(request):
+    update_logging_context(request, {'offense_id': '__new__'})
+    model = type(request.audit).offenses.model_class
+
+    offense = validate_data(request, model)
+    return offense
