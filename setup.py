@@ -42,12 +42,12 @@ setup(name='openprocurement.tender.audit',
       description="",
       long_description=open("README.md").read(),
       classifiers=[
-        "Framework :: Pylons",
-        "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python",
-        "Topic :: Internet :: WWW/HTTP",
-        "Topic :: Internet :: WWW/HTTP :: WSGI :: Application"
-        ],
+          "Framework :: Pylons",
+          "License :: OSI Approved :: Apache Software License",
+          "Programming Language :: Python",
+          "Topic :: Internet :: WWW/HTTP",
+          "Topic :: Internet :: WWW/HTTP :: WSGI :: Application"
+      ],
       keywords="web services",
       author='Quintagroup, Ltd.',
       author_email='info@quintagroup.com',
